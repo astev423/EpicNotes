@@ -6,7 +6,6 @@ fn main() {
         "eframe template",
         NativeOptions::default(),
         // cc provides content which stores state, can do TemplateApp::default() to not save anything
-        // App run_native needs closure or something
         Box::new(|cc| Ok(Box::new(EpicNotesApp::new(cc)))),
     );
 }
