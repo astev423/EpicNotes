@@ -1,4 +1,4 @@
-use egui::{Button, ScrollArea, TextEdit, Ui};
+use egui::{Button, Label, ScrollArea, TextEdit, Ui};
 
 use crate::app::EpicNotesApp;
 
@@ -17,12 +17,10 @@ fn del_notes(app: &mut EpicNotesApp, ui: &mut Ui) {
         if app.notepage_titles.len() == 1 {
             println!("Can't delete your last page of notes!");
         } else {
-            // Find new page to go to before deleting current one, and don't try negative index
+            // Remove notes from vec, but change notes we are viewing first otherwise out of bounds read
             let old_page_num = app.selected_notepage;
-            if app.selected_notepage == 0 {
-                // Len - 1 is normal for index but we -2 since we also subtract an element from vec
-                app.selected_notepage = (app.notepage_titles.len() - 2) as i32;
-            } else {
+            // Go to below notes, unless we are already at bottom
+            if app.selected_notepage != 0 {
                 app.selected_notepage -= 1;
             }
             app.notepage_titles.remove(old_page_num as usize);
@@ -51,14 +49,19 @@ fn select_notes_dropdown(app: &mut EpicNotesApp, ui: &mut Ui) {
 }
 
 fn save_notes(app: &mut EpicNotesApp, ui: &mut egui::Ui) {
-    let response = ui.add(Button::new("Clear text"));
+    let response = ui.add(Button::new("Save notes"));
     if response.clicked() {
         let result = app.export_notes();
         match result {
             Ok(_) => println!("Saved notes to notes.txt"),
             _ => println!("Major FAIL to open file"),
         }
+    }
+}
 
+fn clear_notes(app: &mut EpicNotesApp, ui: &mut egui::Ui) {
+    let response = ui.add(Button::new("Clear notes"));
+    if response.clicked() {
         app.notepage_contents[app.selected_notepage as usize].clear();
     }
 }
@@ -74,13 +77,30 @@ fn show_notepage(app: &mut EpicNotesApp, ui: &mut egui::Ui) {
     });
 }
 
+fn change_notes_title(app: &mut EpicNotesApp, ui: &mut egui::Ui) {
+    ui.horizontal(|ui| {
+        ui.add(Label::new("Change your title here: "));
+        ui.add(
+            TextEdit::singleline(&mut app.notepage_titles[app.selected_notepage as usize])
+                .char_limit(40),
+        );
+    });
+}
+
 pub fn display_gui(app: &mut EpicNotesApp, ui: &mut egui::Ui) {
     ui.heading("Epic Notes");
+    // For dealing with list of notes
     ui.horizontal(|ui| {
         select_notes_dropdown(app, ui);
         add_notes(app, ui);
         del_notes(app, ui);
     });
-    save_notes(app, ui);
+
+    // For dealing with current note page
+    change_notes_title(app, ui);
+    ui.horizontal(|ui| {
+        save_notes(app, ui);
+        clear_notes(app, ui);
+    });
     show_notepage(app, ui);
 }

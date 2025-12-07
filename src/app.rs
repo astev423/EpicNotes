@@ -17,7 +17,7 @@ impl Default for EpicNotesApp {
         Self {
             notepage_titles: vec![String::from("Page one")],
             notepage_contents: vec![String::from("")],
-            selected_notepage: 1,
+            selected_notepage: 0,
         }
     }
 }
@@ -35,9 +35,12 @@ impl EpicNotesApp {
     pub fn export_notes(&self) -> Result<(), Error> {
         let path = format!(
             "/home/alex/projs/rust/epic_notes/notes/{}.txt",
-            &self.notepage_titles[0]
+            &self.notepage_titles[self.selected_notepage as usize]
         );
-        write(path, &self.notepage_contents[0])?;
+        write(
+            path,
+            &self.notepage_contents[self.selected_notepage as usize],
+        )?;
         Ok(())
     }
 }
