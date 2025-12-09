@@ -1,4 +1,25 @@
+use egui::{Ui, Window};
+
 use crate::app::EpicNotesApp;
+
+#[derive(serde::Deserialize, serde::Serialize)]
+#[serde(default)]
+struct Canvas {
+    pixel_grid_2d: Vec<Vec<bool>>,
+}
+
+impl Default for Canvas {
+    fn default() -> Self {
+        Canvas {
+            pixel_grid_2d: vec![Vec::new()],
+        }
+    }
+}
+
+fn show_canvas(app: &mut EpicNotesApp, ui: &mut Ui) {
+    let wind = Window::new("canvas window").auto_sized();
+    ui.add(wind);
+}
 
 pub fn display_draw_gui(app: &mut EpicNotesApp, ui: &mut egui::Ui) {
     ui.horizontal(|ui| {
@@ -8,5 +29,5 @@ pub fn display_draw_gui(app: &mut EpicNotesApp, ui: &mut egui::Ui) {
             println!("clearing canvas");
         };
     });
-    // Add actual canvas here
+    show_canvas(app, ui);
 }
