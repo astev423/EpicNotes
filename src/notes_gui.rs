@@ -1,4 +1,6 @@
-use egui::{Button, Label, ScrollArea, TextEdit, Ui};
+use egui::{Button, FontId, Label, ScrollArea, TextEdit, Ui};
+use std::fs::write;
+use std::io::Error;
 
 use crate::app::EpicNotesApp;
 
@@ -48,12 +50,22 @@ fn select_notes_dropdown(app: &mut EpicNotesApp, ui: &mut Ui) {
         });
 }
 
+fn export_notes(app: &mut EpicNotesApp) -> Result<(), Error> {
+    let path = format!(
+        "/home/alex/projs/rust/epic_notes/notes/{}.md",
+        &app.notepage_titles[app.selected_notepage as usize]
+    );
+    println!("{}", path);
+    write(path, &app.notepage_contents[app.selected_notepage as usize])?;
+    Ok(())
+}
+
 fn save_notes(app: &mut EpicNotesApp, ui: &mut egui::Ui) {
     let response = ui.add(Button::new("Save notes"));
     if response.clicked() {
-        let result = app.export_notes();
+        let result = export_notes(app);
         match result {
-            Ok(_) => println!("Saved notes to notes.txt"),
+            Ok(_) => println!("Saved notes to notes folder in current directory"),
             _ => println!("Major FAIL to open file"),
         }
     }
@@ -66,17 +78,6 @@ fn clear_notes(app: &mut EpicNotesApp, ui: &mut egui::Ui) {
     }
 }
 
-fn show_notepage(app: &mut EpicNotesApp, ui: &mut egui::Ui) {
-    let notes = &mut app.notepage_contents[app.selected_notepage as usize];
-
-    ui.add_space(10.0);
-    // To make things scrollable need to wrap them in ScrollArea
-    ScrollArea::vertical().show(ui, |ui| {
-        // Size it with availible size for responsiveness
-        ui.add_sized(ui.available_size(), TextEdit::multiline(notes));
-    });
-}
-
 fn change_notes_title(app: &mut EpicNotesApp, ui: &mut egui::Ui) {
     ui.horizontal(|ui| {
         ui.add(Label::new("Change your title here: "));
@@ -87,8 +88,22 @@ fn change_notes_title(app: &mut EpicNotesApp, ui: &mut egui::Ui) {
     });
 }
 
-pub fn display_gui(app: &mut EpicNotesApp, ui: &mut egui::Ui) {
-    ui.heading("Epic Notes");
+fn show_notepage(app: &mut EpicNotesApp, ui: &mut egui::Ui) {
+    let notes = &mut app.notepage_contents[app.selected_notepage as usize];
+
+    ui.add_space(10.0);
+    ui.add(egui::Slider::new(&mut app.notes_font_size, 5.0..=150.0).text("Notes font size"));
+    // To make things scrollable need to wrap them in ScrollArea
+    ScrollArea::vertical().show(ui, |ui| {
+        // Size it with availible size for responsiveness
+        ui.add_sized(
+            ui.available_size(),
+            TextEdit::multiline(notes).font(FontId::proportional(app.notes_font_size)),
+        );
+    });
+}
+
+pub fn display_notes_gui(app: &mut EpicNotesApp, ui: &mut egui::Ui) {
     // For dealing with list of notes
     ui.horizontal(|ui| {
         select_notes_dropdown(app, ui);

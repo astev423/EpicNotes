@@ -1,6 +1,6 @@
-use crate::notes_gui::display_gui;
-use std::fs::write;
-use std::io::Error;
+use egui::{Button, Color32, RichText};
+
+use crate::{draw_gui::display_draw_gui, notes_gui::display_notes_gui};
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -9,6 +9,15 @@ pub struct EpicNotesApp {
     pub notepage_titles: Vec<String>,
     pub notepage_contents: Vec<String>,
     pub selected_notepage: i32,
+    pub notes_font_size: f32,
+    pub mode: GuiMode,
+}
+
+// Serde needs this to be serializable and deserializable for notes app
+#[derive(serde::Deserialize, serde::Serialize, PartialEq)]
+pub enum GuiMode {
+    Notes,
+    Drawing,
 }
 
 impl Default for EpicNotesApp {
@@ -18,6 +27,8 @@ impl Default for EpicNotesApp {
             notepage_titles: vec![String::from("Page one")],
             notepage_contents: vec![String::from("")],
             selected_notepage: 0,
+            notes_font_size: 18.0,
+            mode: GuiMode::Notes,
         }
     }
 }
@@ -32,16 +43,38 @@ impl EpicNotesApp {
         }
     }
 
-    pub fn export_notes(&self) -> Result<(), Error> {
-        let path = format!(
-            "/home/alex/projs/rust/epic_notes/notes/{}.txt",
-            &self.notepage_titles[self.selected_notepage as usize]
-        );
-        write(
-            path,
-            &self.notepage_contents[self.selected_notepage as usize],
-        )?;
-        Ok(())
+    pub fn header(&mut self, ui: &mut egui::Ui) {
+        let title = RichText::new("Epic Notes")
+            .size(30.0)
+            .color(Color32::RED)
+            .strong()
+            .background_color(Color32::DARK_GRAY);
+
+        ui.horizontal(|ui| {
+            ui.heading(title);
+            self.mode_buttons(ui);
+        });
+        ui.add_space(10.0);
+    }
+
+    pub fn mode_buttons(&mut self, ui: &mut egui::Ui) {
+        let mut draw_btn = Button::new("Drawing mode");
+        let notes_btn = Button::new("Notes mode").fill(if self.mode == GuiMode::Notes {
+            draw_btn = draw_btn.fill(Color32::DARK_GRAY);
+            Color32::RED
+        } else {
+            draw_btn = draw_btn.fill(Color32::RED);
+            Color32::DARK_GRAY
+        });
+
+        let notes_response = ui.add_sized([35.0, 35.0], notes_btn);
+        if notes_response.clicked() {
+            self.mode = GuiMode::Notes;
+        }
+        let drawing_response = ui.add_sized([35.0, 35.0], draw_btn);
+        if drawing_response.clicked() {
+            self.mode = GuiMode::Drawing;
+        };
     }
 }
 
@@ -57,7 +90,11 @@ impl eframe::App for EpicNotesApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         // Create default panel, then call this closure to run the rest
         egui::CentralPanel::default().show(ctx, |ui| {
-            display_gui(self, ui);
+            self.header(ui);
+            match self.mode {
+                GuiMode::Notes => display_notes_gui(self, ui),
+                GuiMode::Drawing => display_draw_gui(self, ui),
+            };
         });
     }
 }
