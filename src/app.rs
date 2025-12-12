@@ -11,6 +11,7 @@ pub struct EpicNotesApp {
     pub selected_notepage: i32,
     pub notes_font_size: f32,
     pub mode: GuiMode,
+    pub dark_mode: bool,
 }
 
 // Serde needs this to be serializable and deserializable for notes app
@@ -29,6 +30,7 @@ impl Default for EpicNotesApp {
             selected_notepage: 0,
             notes_font_size: 18.0,
             mode: GuiMode::Notes,
+            dark_mode: true,
         }
     }
 }
@@ -43,7 +45,7 @@ impl EpicNotesApp {
         }
     }
 
-    pub fn header(&mut self, ui: &mut egui::Ui) {
+    pub fn header(&mut self, ctx: &egui::Context, ui: &mut egui::Ui) {
         let title = RichText::new("Epic Notes")
             .size(30.0)
             .color(Color32::RED)
@@ -52,12 +54,18 @@ impl EpicNotesApp {
 
         ui.horizontal(|ui| {
             ui.heading(title);
-            self.mode_buttons(ui);
+            self.mode_buttons(ctx, ui);
         });
         ui.add_space(10.0);
     }
 
-    pub fn mode_buttons(&mut self, ui: &mut egui::Ui) {
+    pub fn mode_buttons(&mut self, ctx: &egui::Context, ui: &mut egui::Ui) {
+        let theme_btn = Button::new("Toggle dark mode");
+        if ui.add_sized([35.0, 35.0], theme_btn).clicked() {
+            println!("toggline dark mode");
+            self.toggle_dark_mode(ctx);
+        }
+
         let mut draw_btn = Button::new("Drawing mode");
         let notes_btn = Button::new("Notes mode").fill(if self.mode == GuiMode::Notes {
             draw_btn = draw_btn.fill(Color32::DARK_GRAY);
@@ -76,6 +84,16 @@ impl EpicNotesApp {
             self.mode = GuiMode::Drawing;
         };
     }
+
+    pub fn toggle_dark_mode(&mut self, ctx: &egui::Context) {
+        if self.dark_mode {
+            ctx.set_visuals(egui::Visuals::light());
+            self.dark_mode = false;
+        } else {
+            ctx.set_visuals(egui::Visuals::dark());
+            self.dark_mode = true;
+        }
+    }
 }
 
 impl eframe::App for EpicNotesApp {
@@ -90,7 +108,7 @@ impl eframe::App for EpicNotesApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         // Create default panel, then call this closure to run the rest
         egui::CentralPanel::default().show(ctx, |ui| {
-            self.header(ui);
+            self.header(ctx, ui);
             match self.mode {
                 GuiMode::Notes => display_notes_gui(self, ui),
                 GuiMode::Drawing => display_draw_gui(self, ui),

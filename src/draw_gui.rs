@@ -18,7 +18,6 @@ impl Default for Canvas {
 
 fn show_canvas(app: &mut EpicNotesApp, ui: &mut Ui) {
     let wind = Window::new("canvas window").auto_sized();
-    ui.add(wind);
 }
 
 pub fn display_draw_gui(app: &mut EpicNotesApp, ui: &mut egui::Ui) {
