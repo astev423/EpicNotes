@@ -1,20 +1,15 @@
-use egui::{Button, Color32, Pos2, RichText};
+use egui::{Button, Color32, RichText};
 
-use crate::{draw_gui::display_draw_gui, notes_gui::display_notes_gui};
+use crate::{draw_gui::Canvas, notes_gui::Notes};
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct EpicNotesApp {
-    pub notepage_titles: Vec<String>,
-    pub notepage_contents: Vec<String>,
-    pub selected_notepage: i32,
-    pub notes_font_size: f32,
+    pub notes: Notes,
+    pub canvas: Canvas,
     pub mode: GuiMode,
     pub dark_mode: bool,
-    pub paint_color: egui::Color32,
-    pub paint_lines: Vec<Vec<Pos2>>,
-    pub brush_size: f32,
 }
 
 // Serde needs this to be serializable and deserializable for notes app
@@ -28,15 +23,10 @@ impl Default for EpicNotesApp {
     // Instantiate struct then transfer ownership to caller
     fn default() -> Self {
         Self {
-            notepage_titles: vec![String::from("Page one")],
-            notepage_contents: vec![String::from("")],
-            selected_notepage: 0,
-            notes_font_size: 18.0,
+            notes: Notes::default(),
+            canvas: Canvas::default(),
             mode: GuiMode::Notes,
             dark_mode: true,
-            paint_color: egui::Color32::WHITE,
-            paint_lines: Vec::new(),
-            brush_size: 18.0,
         }
     }
 }
@@ -116,8 +106,8 @@ impl eframe::App for EpicNotesApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             self.header(ctx, ui);
             match self.mode {
-                GuiMode::Notes => display_notes_gui(self, ui),
-                GuiMode::Drawing => display_draw_gui(self, ui),
+                GuiMode::Notes => self.notes.display_notes_gui(ui),
+                GuiMode::Drawing => self.canvas.display_draw_gui(ui),
             };
         });
     }
