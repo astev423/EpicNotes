@@ -4,7 +4,7 @@ use egui::{Color32, Painter, Pos2, Stroke, Ui, Vec2, color_picker::Alpha};
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct Canvas {
     pub paint_color: egui::Color32,
-    pub positions_colored: Vec<Vec<Pos2>>,
+    pub positions_colored: Vec<Pos2>,
     pub brush_size: f32,
 }
 
@@ -45,26 +45,18 @@ impl Canvas {
         let rect = response.rect;
         painter.rect_filled(rect, 0.0, egui::Color32::from_gray(20));
 
-        // Start a new stroke when drag starts which holds all points for a whole drag
-        if response.drag_started() {
-            self.positions_colored.push(Vec::new());
-        }
-
-        // While dragging, push the current pointer position into the last pos vector
+        // Push all positions drawn into vector
         if response.dragged() {
             if let Some(cur_mouse_position) = response.interact_pointer_pos() {
-                if let Some(cur_drag_positions) = self.positions_colored.last_mut() {
-                    cur_drag_positions.push(cur_mouse_position.clamp(rect.min, rect.max));
-                }
+                self.positions_colored
+                    .push(cur_mouse_position.clamp(rect.min, rect.max));
             }
         }
 
         // Draw all strokes
         let stroke = egui::Stroke::new(self.brush_size, self.paint_color);
-        for positions in self.positions_colored.iter() {
-            for position in positions {
-                painter.circle_filled(position.clone(), stroke.width, stroke.color);
-            }
+        for position in self.positions_colored.iter() {
+            painter.circle_filled(position.clone(), stroke.width, stroke.color);
         }
     }
 }

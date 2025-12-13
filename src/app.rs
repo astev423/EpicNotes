@@ -40,7 +40,17 @@ impl eframe::App for EpicNotesApp {
     }
 
     /// Called each time the UI needs repainting, which may be many times per second.
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        // Show fps to test performance
+        egui::TopBottomPanel::top("perf_panel").show(ctx, |ui| {
+            if let Some(cpu) = frame.info().cpu_usage {
+                let ms = cpu * 1000.0;
+                let fps = if cpu > 0.0 { 1.0 / cpu } else { f32::INFINITY };
+                ui.label(format!("CPU frame time: {:.2} ms", ms));
+                ui.label(format!("Approx FPS: {:.1}", fps));
+            }
+        });
+
         // Create default panel, then call this closure to run the rest
         egui::CentralPanel::default().show(ctx, |ui| {
             self.header(ctx, ui);
