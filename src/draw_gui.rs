@@ -1,10 +1,10 @@
-use egui::{Pos2, Ui, color_picker::Alpha};
+use egui::{Color32, Painter, Pos2, Stroke, Ui, Vec2, color_picker::Alpha};
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct Canvas {
     pub paint_color: egui::Color32,
-    pub paint_lines: Vec<Vec<Pos2>>,
+    pub positions_colored: Vec<Vec<Pos2>>,
     pub brush_size: f32,
 }
 
@@ -12,7 +12,7 @@ impl Default for Canvas {
     fn default() -> Self {
         Self {
             paint_color: egui::Color32::WHITE,
-            paint_lines: Vec::new(),
+            positions_colored: Vec::new(),
             brush_size: 18.0,
         }
     }
@@ -29,42 +29,41 @@ impl Canvas {
 
             // Clear button
             if ui.button("Clear canvas").clicked() {
-                self.paint_lines.clear();
+                self.positions_colored.clear();
             }
         });
 
         self.show_canvas(ui);
     }
 
+    /// This makes a single line for as long as user drags, adding new positions every moment
     fn show_canvas(&mut self, ui: &mut Ui) {
-        // Use all remaining space as the canvas (or pick a fixed size instead)
-        let desired_size = ui.available_size();
-        let (response, painter) = ui.allocate_painter(desired_size, egui::Sense::drag());
-
-        let rect = response.rect;
+        // Get region to paint on, input size of it and what response responds to
+        let (response, painter) = ui.allocate_painter(ui.available_size(), egui::Sense::drag());
 
         // Background
+        let rect = response.rect;
         painter.rect_filled(rect, 0.0, egui::Color32::from_gray(20));
 
-        // Start a new stroke when drag starts
+        // Start a new stroke when drag starts which holds all points for a whole drag
         if response.drag_started() {
-            self.paint_lines.push(Vec::new());
+            self.positions_colored.push(Vec::new());
         }
 
-        // While dragging, push the current pointer position into the last stroke
+        // While dragging, push the current pointer position into the last pos vector
         if response.dragged() {
-            if let Some(pos) = response.interact_pointer_pos() {
-                if let Some(line) = self.paint_lines.last_mut() {
-                    line.push(pos.clamp(rect.min, rect.max));
+            if let Some(cur_mouse_position) = response.interact_pointer_pos() {
+                if let Some(cur_drag_positions) = self.positions_colored.last_mut() {
+                    cur_drag_positions.push(cur_mouse_position.clamp(rect.min, rect.max));
                 }
             }
         }
 
         // Draw all strokes
         let stroke = egui::Stroke::new(self.brush_size, self.paint_color);
-        for line in self.paint_lines.iter() {
-            for points in line.windows(2) {
-                painter.line_segment([points[0], points[1]], stroke);
+        for positions in self.positions_colored.iter() {
+            for position in positions {
+                painter.circle_filled(position.clone(), stroke.width, stroke.color);
             }
         }
     }

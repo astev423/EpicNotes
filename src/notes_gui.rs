@@ -125,6 +125,7 @@ impl Notes {
         });
     }
 
+    /// Three lines for documentation, this calls all methods for Notes
     pub fn display_notes_gui(&mut self, ui: &mut egui::Ui) {
         // For dealing with list of notes
         ui.horizontal(|ui| {

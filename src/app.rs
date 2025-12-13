@@ -31,6 +31,27 @@ impl Default for EpicNotesApp {
     }
 }
 
+impl eframe::App for EpicNotesApp {
+    // Called by the framework to save state before shutdown.
+    // OS sends a call to closedown app, this responds to that call by serializing then exits
+    // dyn here because eframe::Storage is a trait
+    fn save(self: &mut EpicNotesApp, storage: &mut dyn eframe::Storage) {
+        eframe::set_value(storage, eframe::APP_KEY, self);
+    }
+
+    /// Called each time the UI needs repainting, which may be many times per second.
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // Create default panel, then call this closure to run the rest
+        egui::CentralPanel::default().show(ctx, |ui| {
+            self.header(ctx, ui);
+            match self.mode {
+                GuiMode::Notes => self.notes.display_notes_gui(ui),
+                GuiMode::Drawing => self.canvas.display_draw_gui(ui),
+            };
+        });
+    }
+}
+
 impl EpicNotesApp {
     /// Called once before the first frame.
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
@@ -41,7 +62,7 @@ impl EpicNotesApp {
         }
     }
 
-    pub fn header(&mut self, ctx: &egui::Context, ui: &mut egui::Ui) {
+    fn header(&mut self, ctx: &egui::Context, ui: &mut egui::Ui) {
         let title = RichText::new("Epic Notes")
             .size(30.0)
             .color(Color32::RED)
@@ -55,7 +76,7 @@ impl EpicNotesApp {
         ui.add_space(10.0);
     }
 
-    pub fn mode_buttons(&mut self, ctx: &egui::Context, ui: &mut egui::Ui) {
+    fn mode_buttons(&mut self, ctx: &egui::Context, ui: &mut egui::Ui) {
         let theme_btn = Button::new("Toggle dark mode");
         if ui.add_sized([35.0, 35.0], theme_btn).clicked() {
             println!("toggline dark mode");
@@ -81,7 +102,7 @@ impl EpicNotesApp {
         };
     }
 
-    pub fn toggle_dark_mode(&mut self, ctx: &egui::Context) {
+    fn toggle_dark_mode(&mut self, ctx: &egui::Context) {
         if self.dark_mode {
             ctx.set_visuals(egui::Visuals::light());
             self.dark_mode = false;
@@ -89,26 +110,5 @@ impl EpicNotesApp {
             ctx.set_visuals(egui::Visuals::dark());
             self.dark_mode = true;
         }
-    }
-}
-
-impl eframe::App for EpicNotesApp {
-    // Called by the framework to save state before shutdown.
-    // OS sends a call to closedown app, this responds to that call by serializing then exits
-    // dyn here because eframe::Storage is a trait
-    fn save(self: &mut EpicNotesApp, storage: &mut dyn eframe::Storage) {
-        eframe::set_value(storage, eframe::APP_KEY, self);
-    }
-
-    /// Called each time the UI needs repainting, which may be many times per second.
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // Create default panel, then call this closure to run the rest
-        egui::CentralPanel::default().show(ctx, |ui| {
-            self.header(ctx, ui);
-            match self.mode {
-                GuiMode::Notes => self.notes.display_notes_gui(ui),
-                GuiMode::Drawing => self.canvas.display_draw_gui(ui),
-            };
-        });
     }
 }
