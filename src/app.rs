@@ -1,4 +1,4 @@
-use egui::{Button, Color32, RichText};
+use egui::{Button, Color32, Pos2, RichText};
 
 use crate::{draw_gui::display_draw_gui, notes_gui::display_notes_gui};
 
@@ -12,6 +12,9 @@ pub struct EpicNotesApp {
     pub notes_font_size: f32,
     pub mode: GuiMode,
     pub dark_mode: bool,
+    pub paint_color: egui::Color32,
+    pub paint_lines: Vec<Vec<Pos2>>,
+    pub brush_size: f32,
 }
 
 // Serde needs this to be serializable and deserializable for notes app
@@ -31,6 +34,9 @@ impl Default for EpicNotesApp {
             notes_font_size: 18.0,
             mode: GuiMode::Notes,
             dark_mode: true,
+            paint_color: egui::Color32::WHITE,
+            paint_lines: Vec::new(),
+            brush_size: 18.0,
         }
     }
 }
