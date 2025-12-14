@@ -56,7 +56,7 @@ impl eframe::App for EpicNotesApp {
             self.header(ctx, ui);
             match self.mode {
                 GuiMode::Notes => self.notes.display_notes_gui(ui, ctx),
-                GuiMode::Drawing => self.canvas.display_draw_gui(ui),
+                GuiMode::Drawing => self.canvas.display_draw_gui(ui, ctx),
             };
         });
     }

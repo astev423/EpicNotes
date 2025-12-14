@@ -1,4 +1,4 @@
-use egui::{Color32, Pos2, Ui, color_picker::Alpha};
+use egui::{Button, Color32, Context, Id, Modal, Pos2, Ui, color_picker::Alpha};
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
@@ -6,6 +6,7 @@ pub struct Canvas {
     paint_color: Color32,
     positions_colored: Vec<(Pos2, f32, Color32)>,
     brush_size: f32,
+    show_clear_modal: bool,
 }
 
 impl Default for Canvas {
@@ -14,12 +15,13 @@ impl Default for Canvas {
             paint_color: egui::Color32::WHITE,
             positions_colored: Vec::new(),
             brush_size: 18.0,
+            show_clear_modal: false,
         }
     }
 }
 
 impl Canvas {
-    pub fn display_draw_gui(&mut self, ui: &mut egui::Ui) {
+    pub fn display_draw_gui(&mut self, ui: &mut egui::Ui, ctx: &Context) {
         ui.horizontal(|ui| {
             // Brush size slider
             ui.add(egui::Slider::new(&mut self.brush_size, 1.0..=50.0).text("Brush size"));
@@ -29,7 +31,26 @@ impl Canvas {
 
             // Clear button
             if ui.button("Clear canvas").clicked() {
-                self.positions_colored.clear();
+                self.show_clear_modal = true;
+            }
+            if self.show_clear_modal {
+                let modal = Modal::new(Id::new("modal"));
+                modal.show(ctx, |ui| {
+                    ui.label("Are you sure?");
+                    ui.vertical_centered_justified(|ui| {
+                        let yes_button = Button::new("Yes").fill(Color32::DARK_RED);
+                        let yes_res = ui.add(yes_button);
+                        if yes_res.clicked() {
+                            self.positions_colored.clear();
+                            self.show_clear_modal = false;
+                        }
+                        let no_button = Button::new("No").fill(Color32::DARK_RED);
+                        let no_res = ui.add(no_button);
+                        if no_res.clicked() {
+                            self.show_clear_modal = false;
+                        }
+                    })
+                });
             }
         });
 

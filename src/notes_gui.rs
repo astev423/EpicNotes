@@ -1,4 +1,4 @@
-use egui::{Button, Context, FontId, Id, Label, Modal, ScrollArea, TextEdit, Ui};
+use egui::{Button, Color32, Context, FontId, Id, Label, Modal, ScrollArea, TextEdit, Ui};
 use std::fs::write;
 use std::io::Error;
 
@@ -9,6 +9,7 @@ pub struct Notes {
     notepage_contents: Vec<String>,
     selected_notepage: i32,
     notes_font_size: f32,
+    show_clear_modal: bool,
 }
 
 impl Default for Notes {
@@ -18,6 +19,7 @@ impl Default for Notes {
             notepage_contents: vec![String::from("")],
             selected_notepage: 0,
             notes_font_size: 18.0,
+            show_clear_modal: false,
         }
     }
 }
@@ -93,11 +95,31 @@ impl Notes {
         }
     }
 
-    fn clear_notes(&mut self, ui: &mut egui::Ui) {
+    fn clear_notes(&mut self, ui: &mut egui::Ui, ctx: &Context) {
         let response = ui.add(Button::new("Clear notes"));
-        // confirm first
         if response.clicked() {
-            self.notepage_contents[self.selected_notepage as usize].clear();
+            self.show_clear_modal = true;
+        }
+
+        // Confirm before deleting
+        if self.show_clear_modal {
+            let modal = Modal::new(Id::new("modal"));
+            modal.show(ctx, |ui| {
+                ui.label("Are you sure?");
+                ui.vertical_centered_justified(|ui| {
+                    let yes_button = Button::new("Yes").fill(Color32::DARK_RED);
+                    let yes_res = ui.add(yes_button);
+                    if yes_res.clicked() {
+                        self.notepage_contents[self.selected_notepage as usize].clear();
+                        self.show_clear_modal = false;
+                    }
+                    let no_button = Button::new("No").fill(Color32::DARK_RED);
+                    let no_res = ui.add(no_button);
+                    if no_res.clicked() {
+                        self.show_clear_modal = false;
+                    }
+                })
+            });
         }
     }
 
@@ -128,11 +150,6 @@ impl Notes {
 
     /// Three lines for documentation, this calls all methods for Notes
     pub fn display_notes_gui(&mut self, ui: &mut egui::Ui, ctx: &Context) {
-        let modal = Modal::new(Id::new("modal"));
-        // modal.show(ctx, |ui| {
-        //     ui.label("are you sure?");
-        // });
-
         // For dealing with list of notes
         ui.horizontal(|ui| {
             self.select_notes_dropdown(ui);
@@ -144,7 +161,7 @@ impl Notes {
         self.change_notes_title(ui);
         ui.horizontal(|ui| {
             self.save_notes(ui);
-            self.clear_notes(ui);
+            self.clear_notes(ui, ctx);
         });
         self.show_notepage(ui);
     }
