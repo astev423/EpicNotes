@@ -6,10 +6,10 @@ use crate::{draw_gui::Canvas, notes_gui::Notes};
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct EpicNotesApp {
-    pub notes: Notes,
-    pub canvas: Canvas,
-    pub mode: GuiMode,
-    pub dark_mode: bool,
+    notes: Notes,
+    canvas: Canvas,
+    mode: GuiMode,
+    dark_mode: bool,
 }
 
 // Serde needs this to be serializable and deserializable for notes app
@@ -55,7 +55,7 @@ impl eframe::App for EpicNotesApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             self.header(ctx, ui);
             match self.mode {
-                GuiMode::Notes => self.notes.display_notes_gui(ui),
+                GuiMode::Notes => self.notes.display_notes_gui(ui, ctx),
                 GuiMode::Drawing => self.canvas.display_draw_gui(ui),
             };
         });

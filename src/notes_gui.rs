@@ -1,14 +1,14 @@
-use egui::{Button, FontId, Label, ScrollArea, TextEdit, Ui};
+use egui::{Button, Context, FontId, Id, Label, Modal, ScrollArea, TextEdit, Ui};
 use std::fs::write;
 use std::io::Error;
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct Notes {
-    pub notepage_titles: Vec<String>,
-    pub notepage_contents: Vec<String>,
-    pub selected_notepage: i32,
-    pub notes_font_size: f32,
+    notepage_titles: Vec<String>,
+    notepage_contents: Vec<String>,
+    selected_notepage: i32,
+    notes_font_size: f32,
 }
 
 impl Default for Notes {
@@ -95,6 +95,7 @@ impl Notes {
 
     fn clear_notes(&mut self, ui: &mut egui::Ui) {
         let response = ui.add(Button::new("Clear notes"));
+        // confirm first
         if response.clicked() {
             self.notepage_contents[self.selected_notepage as usize].clear();
         }
@@ -126,7 +127,12 @@ impl Notes {
     }
 
     /// Three lines for documentation, this calls all methods for Notes
-    pub fn display_notes_gui(&mut self, ui: &mut egui::Ui) {
+    pub fn display_notes_gui(&mut self, ui: &mut egui::Ui, ctx: &Context) {
+        let modal = Modal::new(Id::new("modal"));
+        modal.show(ctx, |ui| {
+            ui.label("are you sure?");
+        });
+
         // For dealing with list of notes
         ui.horizontal(|ui| {
             self.select_notes_dropdown(ui);

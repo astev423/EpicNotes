@@ -1,11 +1,11 @@
-use egui::{Color32, Painter, Pos2, Stroke, Ui, Vec2, color_picker::Alpha};
+use egui::{Id, Modal, Pos2, Ui, color_picker::Alpha};
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct Canvas {
-    pub paint_color: egui::Color32,
-    pub positions_colored: Vec<Pos2>,
-    pub brush_size: f32,
+    paint_color: egui::Color32,
+    positions_colored: Vec<Pos2>,
+    brush_size: f32,
 }
 
 impl Default for Canvas {
