@@ -1,10 +1,10 @@
-use egui::{Id, Modal, Pos2, Ui, color_picker::Alpha};
+use egui::{Color32, Pos2, Ui, color_picker::Alpha};
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct Canvas {
-    paint_color: egui::Color32,
-    positions_colored: Vec<Pos2>,
+    paint_color: Color32,
+    positions_colored: Vec<(Pos2, f32, Color32)>,
     brush_size: f32,
 }
 
@@ -45,18 +45,20 @@ impl Canvas {
         let rect = response.rect;
         painter.rect_filled(rect, 0.0, egui::Color32::from_gray(20));
 
-        // Push all positions drawn into vector
+        // Push all positions drawn and color of them into vector
         if response.dragged() {
             if let Some(cur_mouse_position) = response.interact_pointer_pos() {
-                self.positions_colored
-                    .push(cur_mouse_position.clamp(rect.min, rect.max));
+                self.positions_colored.push((
+                    cur_mouse_position.clamp(rect.min, rect.max),
+                    self.brush_size,
+                    self.paint_color,
+                ));
             }
         }
 
         // Draw all strokes
-        let stroke = egui::Stroke::new(self.brush_size, self.paint_color);
-        for position in self.positions_colored.iter() {
-            painter.circle_filled(position.clone(), stroke.width, stroke.color);
+        for (position, brush_size, color) in self.positions_colored.iter() {
+            painter.circle_filled(position.clone(), *brush_size, color.clone());
         }
     }
 }

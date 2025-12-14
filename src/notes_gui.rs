@@ -129,9 +129,9 @@ impl Notes {
     /// Three lines for documentation, this calls all methods for Notes
     pub fn display_notes_gui(&mut self, ui: &mut egui::Ui, ctx: &Context) {
         let modal = Modal::new(Id::new("modal"));
-        modal.show(ctx, |ui| {
-            ui.label("are you sure?");
-        });
+        // modal.show(ctx, |ui| {
+        //     ui.label("are you sure?");
+        // });
 
         // For dealing with list of notes
         ui.horizontal(|ui| {
